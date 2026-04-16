@@ -41,9 +41,12 @@ def parse_html(filename, date_label, midnight_utc_ms):
     parser.feed(html)
     print(f"DEBUG: {filename} rows={len(parser.records)}", file=sys.stderr)
 
+    for i, row in enumerate(parser.records[:5]):
+        print(f"DEBUG: row[{i}]={row}", file=sys.stderr)
+
     records = []
     for row in parser.records:
-        if len(row) < 6:
+        if len(row) < 3:
             continue
         hour_str = row[0].strip()
         if not hour_str.isdigit():
@@ -52,15 +55,21 @@ def parse_html(filename, date_label, midnight_utc_ms):
         if hour < 0 or hour > 23:
             continue
         try:
-            wave_height = float(row[1])
-            wave_period = float(row[2])
-        except:
+            wave_height = float(row[1].replace(',', '.'))
+            wave_period = float(row[2].replace(',', '.'))
+        except Exception as e:
+            print(f"DEBUG: parse error row={row} e={e}", file=sys.stderr)
             continue
-        try:
-            current_speed = float(row[4])
-        except:
-            current_speed = 0.0
-        current_dir = row[5].strip() if row[5].strip() != '-' else None
+        current_speed = 0.0
+        current_dir = None
+        if len(row) >= 5:
+            try:
+                current_speed = float(row[4].replace(',', '.'))
+            except:
+                pass
+        if len(row) >= 6:
+            d = row[5].strip()
+            current_dir = d if d and d != '-' else None
 
         utc_ms = midnight_utc_ms + hour * 3600000
         records.append({
