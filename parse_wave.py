@@ -32,11 +32,14 @@ def parse_html(filename, date_label, midnight_utc_ms):
     try:
         with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
             html = f.read()
-    except:
+        print(f"DEBUG: {filename} size={len(html)}", file=sys.stderr)
+    except Exception as e:
+        print(f"DEBUG: Failed to open {filename}: {e}", file=sys.stderr)
         return []
 
     parser = WaveTableParser()
     parser.feed(html)
+    print(f"DEBUG: {filename} rows={len(parser.records)}", file=sys.stderr)
 
     records = []
     for row in parser.records:
@@ -68,6 +71,8 @@ def parse_html(filename, date_label, midnight_utc_ms):
             'currentSpeed': current_speed,
             'currentDir': current_dir,
         })
+
+    print(f"DEBUG: {filename} parsed={len(records)}", file=sys.stderr)
     return records
 
 def main():
@@ -99,6 +104,7 @@ def main():
     filtered = [r for r in all_records if cutoff_ms <= r['utcMs'] <= upper_ms]
     filtered.sort(key=lambda r: r['utcMs'])
 
+    print(f"DEBUG: total={len(all_records)} filtered={len(filtered)}", file=sys.stderr)
     print(json.dumps(filtered, ensure_ascii=False))
 
 if __name__ == '__main__':
