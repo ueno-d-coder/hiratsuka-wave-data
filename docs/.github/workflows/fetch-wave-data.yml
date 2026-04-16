@@ -1,5 +1,0 @@
-name: Fetch Hiratsuka Wave Data
-on:  schedule:    - cron: '5 * * * *'  workflow_dispatch:
-jobs:  fetch:    runs-on: ubuntu-latest    steps:      - uses: actions/checkout@v4
-      - name: Fetch wave data        run: |          TODAY=$(TZ=Asia/Tokyo date +%Y%m%d)          YESTERDAY=$(TZ=Asia/Tokyo date -d 'yesterday' +%Y%m%d)          curl -s "http://61.206.118.118/list.html" -o today.html          curl -s "http://61.206.118.118/list_data/${YESTERDAY}list.html" -o yesterday.html          python3 parse_wave.py today.html yesterday.html > docs/wave_data.json
-      - name: Commit and push        run: |          git config user.name "github-actions"          git config user.email "actions@github.com"          git add docs/wave_data.json          git diff --staged --quiet || git commit -m "Update wave data $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M JST')"          git push
