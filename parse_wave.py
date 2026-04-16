@@ -32,43 +32,39 @@ def parse_html(filename, date_label, midnight_utc_ms):
     try:
         with open(filename, 'r', encoding='utf-8', errors='ignore') as f:
             html = f.read()
-        print(f"DEBUG: {filename} size={len(html)}", file=sys.stderr)
     except Exception as e:
         print(f"DEBUG: Failed to open {filename}: {e}", file=sys.stderr)
         return []
 
     parser = WaveTableParser()
     parser.feed(html)
-    print(f"DEBUG: {filename} rows={len(parser.records)}", file=sys.stderr)
-
-    for i, row in enumerate(parser.records[:5]):
-        print(f"DEBUG: row[{i}]={row}", file=sys.stderr)
 
     records = []
     for row in parser.records:
-        if len(row) < 3:
+        # 空白セルを除去
+        cells = [c for c in row if c != '']
+        if len(cells) < 3:
             continue
-        hour_str = row[0].strip()
+        hour_str = cells[0].strip()
         if not hour_str.isdigit():
             continue
         hour = int(hour_str)
         if hour < 0 or hour > 23:
             continue
         try:
-            wave_height = float(row[1].replace(',', '.'))
-            wave_period = float(row[2].replace(',', '.'))
-        except Exception as e:
-            print(f"DEBUG: parse error row={row} e={e}", file=sys.stderr)
+            wave_height = float(cells[1].replace(',', '.'))
+            wave_period = float(cells[2].replace(',', '.'))
+        except:
             continue
         current_speed = 0.0
         current_dir = None
-        if len(row) >= 5:
+        if len(cells) >= 5:
             try:
-                current_speed = float(row[4].replace(',', '.'))
+                current_speed = float(cells[4].replace(',', '.'))
             except:
                 pass
-        if len(row) >= 6:
-            d = row[5].strip()
+        if len(cells) >= 6:
+            d = cells[5].strip()
             current_dir = d if d and d != '-' else None
 
         utc_ms = midnight_utc_ms + hour * 3600000
